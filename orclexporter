@@ -1,0 +1,95 @@
+#!/bin/sh
+if [ $# -lt 4 ]; then
+    echo "usage: "$(basename $0)" user(UPPER CASE) password database table [rowlimit]"
+    exit 1
+else
+    USER=$1
+    PASS=$2
+    DB=$3
+    TBL=$4
+fi
+OUTNAME=$TBL
+LIMIT=99999999
+if [ $# -gt 4 ]; then
+    LIMIT=$5
+    OUTNAME=${OUTNAME}_$LIMIT
+fi
+OUTNAME=${OUTNAME}.CSV
+
+cat > p.sql <<EOF
+set echo off
+set linesize 10000
+set pagesize 0
+set trimspool on
+set feedback off
+set colsep ','
+spool q.dat
+select
+    case column_id
+    when 1 then ''
+    else        ' || '','' || '
+    end
+    ||
+    case  DATA_TYPE
+    when 'DATE' then 'TO_CHAR(' || column_name || ', ''YYYYMMDD'')'
+    else column_name
+    end
+from ALL_TAB_COLUMNS
+where table_name = '$1'
+and owner = '$USER'
+order by column_id;
+spool off
+quit;
+EOF
+cat > p.sql <<EOF
+set echo off
+set linesize 10000
+set pagesize 0
+set trimspool on
+set feedback off
+set colsep ','
+spool q.dat
+select
+    case column_id
+    when 1 then ''
+    else        ' || '','' || '
+    end
+    || column_name
+from ALL_TAB_COLUMNS
+where table_name = '$TBL'
+and owner = '$USER'
+order by column_id;
+spool off
+quit;
+EOF
+
+sqlplus $USER/$PASS@$DB @p.sql >/dev/null
+
+cat > q.sql <<EOF
+set echo off
+set linesize 1000
+set pagesize 0
+set trimspool on
+set feedback off
+set colsep ','
+spool $OUTNAME
+select
+EOF
+nkf -w q.dat >> q.sql
+cat >> q.sql <<EOF
+from
+ $TBL
+where
+ rownum <= $LIMIT
+;
+spool off
+quit;
+EOF
+
+nkf -s --overwrite q.sql
+sqlplus $USER/$PASS@$DB @q.sql >/dev/null
+
+#cat q.sql
+rm p.sql
+rm q.dat
+rm q.sql
