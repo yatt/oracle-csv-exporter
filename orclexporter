@@ -87,9 +87,9 @@ EOF
 nkf -s --overwrite q$$.sql
 sqlplus $USER/$PASS@$DB @q$$.sql >/dev/null
 
-#rm p$$.sql
-#rm q$$.dat
-#rm q$$.sql
+rm p$$.sql
+rm q$$.dat
+rm q$$.sql
 
 ### for view
 else
