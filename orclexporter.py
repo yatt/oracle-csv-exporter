@@ -5,12 +5,16 @@
 #
 # CSV file export program for Oracle 10g/11g
 #
-#        this program can handle query properly if query response contain very
-#    large amount of content and generated csv size become also large.
-#        csv format program generate is costomizable. see list below
+#    this tools handles input query properly whenever server returns very
+#    large amount of bytes, while some tools crash.
 #
-#            - specify newline character code CR / LF / CRLF
-#            - enclose each column by double-quote
+#    output format is costomizable. see list below
+#
+#      - newline character code CR / LF / CRLF
+#      - enclose each column by double-quote
+#      - output csv as zip archive directly
+#            this function allows you to minimize dump
+#            without temporary storage area.
 #
 #
 #    
@@ -25,7 +29,9 @@
 # # enclose each column by "
 # $ orclexporter -q user/pass@host 'select * from tbl'
 # # specify line separator
-# $ orclexporter -newline=CRLF user/pass@host 'select * from tbl'
+# $ orclexporter --newline=CRLF user/pass@host 'select * from tbl'
+# # output zip archive
+# $ orclexporter --compress user/pass@host 'select * from tbl'
 #
 ################################################################################
 
